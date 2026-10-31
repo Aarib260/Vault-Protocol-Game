@@ -1,0 +1,324 @@
+{
+  "communities": {
+    "0": [
+      "package",
+      "package_dependencies",
+      "package_dependencies_dotenv",
+      "package_dependencies_express",
+      "package_dependencies_google_genai",
+      "package_description",
+      "package_engines",
+      "package_engines_node",
+      "package_keywords",
+      "package_license",
+      "package_main",
+      "package_name",
+      "package_scripts",
+      "package_scripts_check",
+      "package_scripts_dev",
+      "package_scripts_start",
+      "package_scripts_test",
+      "package_type",
+      "package_version",
+      "ref_dotenv",
+      "ref_express",
+      "ref_google_genai"
+    ],
+    "1": [
+      "ref_node_assert",
+      "ref_node_test",
+      "server_checkgemma",
+      "server_gamelogic_creategamestate",
+      "server_gamelogic_invalidairesponseerror",
+      "server_gamelogic_invalidairesponseerror_constructor",
+      "server_gamelogic_parseaijson",
+      "server_gemma",
+      "server_gemma_assertgemmamodel",
+      "server_gemma_creategemmaclient",
+      "server_gemma_creategemmaclient_callmodel",
+      "server_gemma_gemmaerror",
+      "server_gemma_gemmaerror_constructor",
+      "server_gemma_generateturnwith",
+      "server_gemma_togemmaerror",
+      "test_game_test",
+      "test_game_test_ai",
+      "test_game_test_correct",
+      "test_game_test_fakegemma",
+      "test_game_test_say",
+      "test_game_test_turn",
+      "test_game_test_withserver",
+      "test_game_test_wrong"
+    ],
+    "2": [
+      "ref_node_crypto",
+      "server_gamelogic",
+      "server_gamelogic_cleanstring",
+      "server_gamelogic_correct_answer_change",
+      "server_gamelogic_formal_markers",
+      "server_gamelogic_goalsfor",
+      "server_gamelogic_interjections",
+      "server_gamelogic_keyboard_rows",
+      "server_gamelogic_lookslikegibberishword",
+      "server_gamelogic_max_message_length",
+      "server_gamelogic_max_suspicion",
+      "server_gamelogic_min_suspicion",
+      "server_gamelogic_name_change_penalty",
+      "server_gamelogic_rude_markers",
+      "server_gamelogic_start_suspicion",
+      "server_gamelogic_tone_change",
+      "server_gamelogic_tones",
+      "server_gamelogic_unintelligible_penalty",
+      "server_gamelogic_wrong_answer_change"
+    ],
+    "3": [
+      "ref_node_path",
+      "ref_node_url",
+      "server_gamelogic_createsessionstore",
+      "server_gamelogic_createsessionstore_prune",
+      "server_gamelogic_isunintelligible",
+      "server_gamelogic_nextquestionkind",
+      "server_gamelogic_publicstate",
+      "server_gamelogic_stage1transcripttext",
+      "server_gamelogic_validateairesponse",
+      "server_gamelogic_validateplayermessage",
+      "server_index",
+      "server_index_createapp",
+      "server_index_dirname",
+      "server_index_ratelimit",
+      "server_prompts_buildsystemprompt"
+    ],
+    "4": [
+      "public_script",
+      "public_script_adddivider",
+      "public_script_addmessage",
+      "public_script_addsystem",
+      "public_script_api",
+      "public_script_autoresize",
+      "public_script_clearerror",
+      "public_script_el",
+      "public_script_get",
+      "public_script_hideoverlay",
+      "public_script_renderall",
+      "public_script_renderbriefing",
+      "public_script_renderchecklist",
+      "public_script_renderheader",
+      "public_script_rendersoundbtn",
+      "public_script_renderstatic",
+      "public_script_rendertranscript",
+      "public_script_restart",
+      "public_script_scrolltobottom",
+      "public_script_send",
+      "public_script_set",
+      "public_script_setcomposerenabled",
+      "public_script_setmood",
+      "public_script_setsuspicion",
+      "public_script_showerror",
+      "public_script_showloss",
+      "public_script_showoverlay",
+      "public_script_showwin",
+      "public_script_start",
+      "public_script_starttypingsound",
+      "public_script_stoptypingsound",
+      "public_script_turnstaken",
+      "public_script_typemessage",
+      "public_script_typemessage_finish",
+      "public_script_typemessage_step",
+      "public_script_updatecounter",
+      "readme_customise_it"
+    ],
+    "5": [
+      "readme",
+      "readme_api_routes",
+      "readme_credits",
+      "readme_deploy_it_free_with_render",
+      "readme_features",
+      "readme_how_it_works",
+      "readme_how_to_play",
+      "readme_ideas_for_later",
+      "readme_known_limitations",
+      "readme_license",
+      "readme_project_structure",
+      "readme_run_it_locally",
+      "readme_scoring",
+      "readme_security_notes",
+      "readme_team",
+      "readme_tech_stack",
+      "readme_the_story",
+      "readme_vault_protocol",
+      "readme_winning_and_losing"
+    ],
+    "6": [
+      "server_gamelogic_applyturn",
+      "server_gamelogic_claimsmanagersent",
+      "server_gamelogic_clamp",
+      "server_gamelogic_isdifferentname",
+      "server_gamelogic_lastquestion",
+      "server_gamelogic_norm",
+      "server_gamelogic_pick",
+      "server_gamelogic_setpending",
+      "server_gamelogic_signed"
+    ],
+    "7": [
+      "server_prompts",
+      "server_prompts_briefing",
+      "server_prompts_briefing_questions",
+      "server_prompts_dossier",
+      "server_prompts_fallback_questions",
+      "server_prompts_json_repair_instruction",
+      "server_prompts_stages",
+      "server_prompts_unintelligible_replies"
+    ],
+    "11": [
+      "server_gamelogic_decidetone",
+      "server_gamelogic_formalscore",
+      "server_gamelogic_rudescore"
+    ]
+  },
+  "cohesion": {
+    "0": 0.1038961038961039,
+    "1": 0.15019762845849802,
+    "2": 0.10526315789473684,
+    "3": 0.20952380952380953,
+    "4": 0.15015015015015015,
+    "5": 0.10526315789473684,
+    "6": 0.2222222222222222,
+    "7": 0.25,
+    "11": 0.6666666666666666
+  },
+  "gods": [
+    {
+      "id": "public_script_send",
+      "label": "send()",
+      "degree": 22
+    },
+    {
+      "id": "readme_vault_protocol",
+      "label": "🔓 Vault Protocol",
+      "degree": 15
+    },
+    {
+      "id": "server_gamelogic_applyturn",
+      "label": "applyTurn()",
+      "degree": 14
+    },
+    {
+      "id": "public_script_renderall",
+      "label": "renderAll()",
+      "degree": 13
+    },
+    {
+      "id": "server_index_createapp",
+      "label": "createApp()",
+      "degree": 12
+    },
+    {
+      "id": "public_script_el",
+      "label": "el()",
+      "degree": 9
+    },
+    {
+      "id": "public_script_restart",
+      "label": "restart()",
+      "degree": 9
+    },
+    {
+      "id": "public_script_typemessage",
+      "label": "typeMessage()",
+      "degree": 9
+    },
+    {
+      "id": "server_gamelogic_invalidairesponseerror",
+      "label": "InvalidAiResponseError",
+      "degree": 7
+    },
+    {
+      "id": "server_gamelogic_validateairesponse",
+      "label": "validateAiResponse()",
+      "degree": 7
+    }
+  ],
+  "surprises": [
+    {
+      "source": "🛠️ Customise it",
+      "target": "buildSystemPrompt()",
+      "source_files": [
+        "README.md",
+        "server/prompts.js"
+      ],
+      "confidence": "INFERRED",
+      "relation": "references",
+      "why": "inferred connection - not explicitly stated in source; crosses file types (code ↔ doc); connects across different repos/directories; bridges separate communities"
+    },
+    {
+      "source": "🛠️ Customise it",
+      "target": "typeMessage()",
+      "source_files": [
+        "README.md",
+        "public/script.js"
+      ],
+      "confidence": "INFERRED",
+      "relation": "references",
+      "why": "inferred connection - not explicitly stated in source; crosses file types (code ↔ doc); connects across different repos/directories"
+    },
+    {
+      "source": "withServer()",
+      "target": "createApp()",
+      "source_files": [
+        "test/game.test.js",
+        "server/index.js"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "connects across different repos/directories; bridges separate communities; peripheral node `withServer()` unexpectedly reaches hub `createApp()`"
+    },
+    {
+      "source": "turn()",
+      "target": "applyTurn()",
+      "source_files": [
+        "test/game.test.js",
+        "server/gameLogic.js"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "connects across different repos/directories; bridges separate communities"
+    },
+    {
+      "source": "turn()",
+      "target": "validateAiResponse()",
+      "source_files": [
+        "test/game.test.js",
+        "server/gameLogic.js"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "connects across different repos/directories; bridges separate communities"
+    }
+  ],
+  "questions": [
+    {
+      "type": "bridge_node",
+      "question": "Why does `🛠️ Customise it` connect `Frontend: chat, typing, meter, overlays` to `Express server, routes & sessions`, `README docs`?",
+      "why": "High betweenness centrality (0.520) - this node is a cross-community bridge."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Project setup & dependencies` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.1038961038961039 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `buildSystemPrompt()` connect `Express server, routes & sessions` to `Gemma API client & error handling`, `Frontend: chat, typing, meter, overlays`, `Story data: stages, intel, questions`?",
+      "why": "High betweenness centrality (0.466) - this node is a cross-community bridge."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Scoring rules & constants` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.10526315789473684 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `README docs` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.10526315789473684 - nodes in this community are weakly interconnected."
+    }
+  ]
+}

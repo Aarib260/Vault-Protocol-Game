@@ -1,0 +1,9 @@
+# Folders/files graphify should skip (same syntax as .gitignore)
+node_modules/
+graphify-out/
+public/img/
+public/fonts/
+public/sounds/
+docs/
+package-lock.json
+.env

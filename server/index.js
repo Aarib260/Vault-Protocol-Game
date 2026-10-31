@@ -36,7 +36,10 @@ export function rateLimit({ windowMs, max, message }) {
     for (const [key, v] of hits) if (now > v.reset) hits.delete(key);
   }, windowMs).unref();
   return (req, res, next) => {
-    const key = req.ip || 'unknown';
+    // On Render, every request arrives through Render's proxy, so req.ip would be the same for
+    // everyone. Render's edge sets True-Client-IP to the real visitor IP - use it there.
+    // (Render sets RENDER=true automatically. Locally we ignore the header so it can't be faked.)
+    const key = (process.env.RENDER && req.get('true-client-ip')) || req.ip || 'unknown';
     const now = Date.now();
     let entry = hits.get(key);
     if (!entry || now > entry.reset) {

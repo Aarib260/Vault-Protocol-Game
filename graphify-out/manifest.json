@@ -1,0 +1,68 @@
+{
+  "package.json": {
+    "mtime": 1793436864.2709289,
+    "seen": 1793445405.4909644,
+    "ast_hash": "88ac2808d7a05b7bcb43230d88fc659b",
+    "semantic_hash": "88ac2808d7a05b7bcb43230d88fc659b"
+  },
+  "public/script.js": {
+    "mtime": 1793443820.5529702,
+    "seen": 1793445405.490973,
+    "ast_hash": "26ad695e5854a33cb8a408930c08552c",
+    "semantic_hash": "26ad695e5854a33cb8a408930c08552c"
+  },
+  "server/checkGemma.js": {
+    "mtime": 1793436652.4509337,
+    "seen": 1793445405.4909763,
+    "ast_hash": "b4bf8b403030dbb09590d3e08abd1d19",
+    "semantic_hash": "b4bf8b403030dbb09590d3e08abd1d19"
+  },
+  "server/gameLogic.js": {
+    "mtime": 1793442902.5178838,
+    "seen": 1793445405.4909785,
+    "ast_hash": "956629c72f594465bff7d28ca7e52b8a",
+    "semantic_hash": "956629c72f594465bff7d28ca7e52b8a"
+  },
+  "server/gemma.js": {
+    "mtime": 1793436803.5989304,
+    "seen": 1793445405.4910133,
+    "ast_hash": "2e8f3573376ee931fd3d75b26ae25b79",
+    "semantic_hash": "2e8f3573376ee931fd3d75b26ae25b79"
+  },
+  "server/index.js": {
+    "mtime": 1793444563.011724,
+    "seen": 1793445405.491017,
+    "ast_hash": "a1e94c3140f33f670d9a28512eaf2d8b",
+    "semantic_hash": "a1e94c3140f33f670d9a28512eaf2d8b"
+  },
+  "server/prompts.js": {
+    "mtime": 1793442889.2659035,
+    "seen": 1793445405.49102,
+    "ast_hash": "23bf4691fc0dd1872ecd3a03e7bed1d3",
+    "semantic_hash": "23bf4691fc0dd1872ecd3a03e7bed1d3"
+  },
+  "test/game.test.js": {
+    "mtime": 1793442902.5186615,
+    "seen": 1793445405.4910223,
+    "ast_hash": "1d42814e0e33c7fcc04a054dc1110c3c",
+    "semantic_hash": "1d42814e0e33c7fcc04a054dc1110c3c"
+  },
+  "README.md": {
+    "mtime": 1793444697.2548673,
+    "seen": 1793445485.0842912,
+    "ast_hash": "635d9b67e41d476736ee1fe01ab0077a",
+    "semantic_hash": ""
+  },
+  "public/index.html": {
+    "mtime": 1793443820.5517988,
+    "seen": 1793445485.0842934,
+    "ast_hash": "57e70577f0de9b63ea394b25b359e199",
+    "semantic_hash": ""
+  },
+  "package-lock.json": {
+    "mtime": 1793436457.646938,
+    "seen": 1793445485.0842948,
+    "ast_hash": "0496e25a712e66f71ff5044761ae6fe2",
+    "semantic_hash": ""
+  }
+}

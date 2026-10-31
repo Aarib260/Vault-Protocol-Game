@@ -1,0 +1,2183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>bank-security-game — Complete Call Flow &amp; Architecture Documentation</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+:root {
+  --bg: #0f172a; --surface: #1e293b; --border: #334155;
+  --text: #e2e8f0; --muted: #94a3b8; --accent: #38bdf8;
+  --warn: #fbbf24; --err: #f87171; --ok: #34d399;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+.container { max-width: 1200px; margin: 0 auto; padding: 40px 24px; }
+h1 { font-size: 2.4rem; margin-bottom: 8px; background: linear-gradient(135deg, var(--accent), #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+h2 { font-size: 1.7rem; margin: 48px 0 16px; padding-bottom: 8px; border-bottom: 2px solid var(--accent); }
+h3 { font-size: 1.25rem; margin: 32px 0 12px; color: var(--accent); }
+h4 { font-size: 1.05rem; margin: 20px 0 8px; color: var(--warn); }
+p { margin: 8px 0; color: var(--muted); }
+.subtitle { color: var(--muted); font-size: 1.1rem; margin-bottom: 32px; }
+.mermaid { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 20px 0; overflow-x: auto; position: relative; }
+.mermaid.is-enhanced { padding: 0; overflow: hidden; min-height: 260px; }
+.mermaid-viewport { padding: 54px 24px 24px; overflow: hidden; cursor: grab; touch-action: none; min-height: 260px; }
+.mermaid-viewport.is-dragging { cursor: grabbing; }
+.mermaid-viewport svg { max-width: none !important; height: auto; transform-origin: 0 0; transition: transform 120ms ease; }
+.mermaid-toolbar { position: absolute; top: 10px; right: 10px; z-index: 3; display: flex; align-items: center; gap: 6px; padding: 6px; background: rgba(15,23,42,0.92); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.28); }
+.mermaid-toolbar button, .mermaid-toolbar .zoom-level { height: 28px; min-width: 32px; border: 1px solid var(--border); border-radius: 6px; background: #1e293b; color: var(--text); font: 600 0.78rem system-ui, sans-serif; display: inline-flex; align-items: center; justify-content: center; }
+.mermaid-toolbar button { cursor: pointer; }
+.mermaid-toolbar button:hover { border-color: var(--accent); color: var(--accent); }
+.mermaid-toolbar .zoom-level { min-width: 52px; color: var(--muted); background: transparent; }
+.call-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.92rem; }
+.call-table th { background: #1a2744; color: var(--accent); text-align: left; padding: 10px 14px; border: 1px solid var(--border); }
+.call-table td { padding: 8px 14px; border: 1px solid var(--border); vertical-align: top; }
+.call-table tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; }
+.tag-async { background: #7c3aed33; color: #a78bfa; }
+.tag-class { background: #05966933; color: var(--ok); }
+.tag-func { background: #2563eb33; color: var(--accent); }
+.tag-cmd { background: #d9770633; color: var(--warn); }
+.tag-endpoint { background: #dc262633; color: var(--err); }
+.tag-hook { background: #db277733; color: #f472b6; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin: 16px 0; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; margin: 16px 0; }
+.arrow-chain { font-family: 'Fira Code', monospace; font-size: 0.85rem; color: var(--accent); padding: 10px; background: rgba(56,189,248,0.06); border-radius: 6px; }
+code { font-family: 'Fira Code', 'Cascadia Code', monospace; background: rgba(255,255,255,0.06); padding: 1px 6px; border-radius: 3px; font-size: 0.88em; }
+ul, ol { margin: 8px 0 8px 24px; color: var(--muted); }
+li { margin: 4px 0; }
+a { color: var(--accent); }
+hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+.nav { position: sticky; top: 0; background: var(--bg); z-index: 10; padding: 12px 0; border-bottom: 1px solid var(--border); display: flex; gap: 20px; flex-wrap: wrap; font-size: 0.9rem; }
+.nav a { text-decoration: none; }
+.nav a:hover { text-decoration: underline; }
+@media (max-width: 768px) { .container { padding: 16px; } h1 { font-size: 1.8rem; } }
+
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>bank-security-game — Complete Call Flow &amp; Architecture Documentation</h1>
+<p class="subtitle">Generated from graphify knowledge graph: 155 nodes, 310 edges, 9 communities. Commit: unknown</p>
+
+<div class="nav">
+    <a href="#overview">Architecture Overview</a>
+    <a href="#build-graph">Graph Build</a>
+    <a href="#tests-fixtures">Tests &amp; Fixtures</a>
+    <a href="#frontend-chat-typing-meter-overlays">Frontend: chat, typing, meter, overlays</a>
+    <a href="#scoring-rules-constants">Scoring rules &amp; constants</a>
+    <a href="#readme-docs">README docs</a>
+    <a href="#turn-referee-applyturn">Turn referee (applyTurn)</a>
+    <a href="#story-data-stages-intel-questions">Story data: stages, intel, questions</a>
+    <a href="#tone-detection-sir-rude">Tone detection (sir / rude)</a>
+</div>
+
+<!-- ====== Architecture Overview ====== -->
+<h2 id="overview">1. Architecture Overview</h2>
+
+<div class="mermaid">
+
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    BUILD_GRAPH_321CBB04("Graph Build<br/><small>37 nodes</small>")
+    class BUILD_GRAPH_321CBB04 module;
+    TESTS_FIXTURES_B84B1DCC("Tests &amp; Fixtures<br/><small>23 nodes</small>")
+    class TESTS_FIXTURES_B84B1DCC module;
+    FRONTEND_CHAT_TYPING_METER_OVERLAYS_FD19BE9D("Frontend: chat, typing, meter, overlays<br/><small>37 nodes</small>")
+    class FRONTEND_CHAT_TYPING_METER_OVERLAYS_FD19BE9D module;
+    SCORING_RULES_CONSTANTS_26F28265("Scoring rules &amp; constants<br/><small>19 nodes</small>")
+    class SCORING_RULES_CONSTANTS_26F28265 module;
+    README_DOCS_C6F25C68("README docs<br/><small>19 nodes</small>")
+    class README_DOCS_C6F25C68 module;
+    TURN_REFEREE_APPLYTURN_27D1A814("Turn referee (applyTurn)<br/><small>9 nodes</small>")
+    class TURN_REFEREE_APPLYTURN_27D1A814 module;
+    STORY_DATA_STAGES_INTEL_QUESTIONS_86C3E384("Story data: stages, intel, questions<br/><small>8 nodes</small>")
+    class STORY_DATA_STAGES_INTEL_QUESTIONS_86C3E384 module;
+    TONE_DETECTION_SIR_RUDE_96006EB5("Tone detection (sir / rude)<br/><small>3 nodes</small>")
+    class TONE_DETECTION_SIR_RUDE_96006EB5 module;
+    TESTS_FIXTURES_B84B1DCC -->|imports x11| BUILD_GRAPH_321CBB04
+    SCORING_RULES_CONSTANTS_26F28265 -->|contains x9| TURN_REFEREE_APPLYTURN_27D1A814
+    SCORING_RULES_CONSTANTS_26F28265 -->|imports x7| STORY_DATA_STAGES_INTEL_QUESTIONS_86C3E384
+    SCORING_RULES_CONSTANTS_26F28265 -->|contains x7| BUILD_GRAPH_321CBB04
+    BUILD_GRAPH_321CBB04 -->|imports x5| TESTS_FIXTURES_B84B1DCC
+    TESTS_FIXTURES_B84B1DCC -->|imports x5| STORY_DATA_STAGES_INTEL_QUESTIONS_86C3E384
+    TESTS_FIXTURES_B84B1DCC -->|imports x4| TURN_REFEREE_APPLYTURN_27D1A814
+    BUILD_GRAPH_321CBB04 -->|calls x4| SCORING_RULES_CONSTANTS_26F28265
+    TESTS_FIXTURES_B84B1DCC -->|imports x3| TONE_DETECTION_SIR_RUDE_96006EB5
+    SCORING_RULES_CONSTANTS_26F28265 -->|contains x3| TONE_DETECTION_SIR_RUDE_96006EB5
+    SCORING_RULES_CONSTANTS_26F28265 -->|contains x3| TESTS_FIXTURES_B84B1DCC
+    BUILD_GRAPH_321CBB04 -->|calls x2| TURN_REFEREE_APPLYTURN_27D1A814
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<div class="grid">
+  <div class="card">
+    <h4>Architecture Layers</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>Layer</th><th>Nodes</th><th>Communities</th></tr>
+      <tr><td>Graph Build</td><td>37</td><td><code>0, 3</code></td></tr><tr><td>Tests &amp; Fixtures</td><td>23</td><td><code>1</code></td></tr><tr><td>Frontend: chat, typing, meter, overlays</td><td>37</td><td><code>4</code></td></tr><tr><td>Scoring rules &amp; constants</td><td>19</td><td><code>2</code></td></tr><tr><td>README docs</td><td>19</td><td><code>5</code></td></tr><tr><td>Turn referee (applyTurn)</td><td>9</td><td><code>6</code></td></tr><tr><td>Story data: stages, intel, questions</td><td>8</td><td><code>7</code></td></tr><tr><td>Tone detection (sir / rude)</td><td>3</td><td><code>11</code></td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Core Flow</h4>
+    <div class="arrow-chain">README docs -&gt; Frontend: chat, typing, meter, overlays -&gt; Graph Build -&gt; Tests &amp; Fixtures -&gt; Story data: stages, intel, questions -&gt; Scoring rules &amp; constants -&gt; Turn referee (applyTurn)</div>
+  </div>
+</div>
+<div class="grid">
+  <div class="card">
+    <h4>Graph Report Highlights</h4>
+    <ul>
+      <li>155 nodes · 310 edges · 9 communities</li>
+      <li>Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 9 edges (avg confidence: 0.87)</li>
+      <li>Token cost: 0 input · 0 output</li>
+      <li>1. `send()` - 22 edges</li>
+      <li>2. `🔓 Vault Protocol` - 15 edges</li>
+      <li>3. `applyTurn()` - 14 edges</li>
+    </ul>
+  </div>
+</div>
+<hr>
+<!-- ====== 2. Graph Build ====== -->
+<h2 id="build-graph">2. Graph Build</h2>
+<p>Graph Build groups implementation around packagejson, server, gamelogicjs, indexjs, mostly in package.json, server/gameLogic.js, server/index.js. This section covers 37 nodes and 48 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Graph Build (37 nodes, 48 edges)
+    subgraph build_graph_server_gameLogic_js_7c96fab2["server/gameLogic.js"]
+        server_gamelogic_validateplayermessage_128c37ca("validatePlayerMessage()<br/><small>server/gameLogic.js</small>")
+        server_gamelogic_isunintelligible_5a0a672d("isUnintelligible()<br/><small>server/gameLogic.js</small>")
+        server_gamelogic_nextquestionkind_1c799780("nextQuestionKind()<br/><small>server/gameLogic.js</small>")
+        server_gamelogic_stage1transcripttext_41921c97("stage1TranscriptText()<br/><small>server/gameLogic.js</small>")
+        server_gamelogic_validateairesponse_d25a9a10("validateAiResponse()<br/><small>server/gameLogic.js</small>")
+        server_gamelogic_publicstate_68d029fc("publicState()<br/><small>server/gameLogic.js</small>")
+        server_gamelogic_createsessionstore_0260ef44("createSessionStore()<br/><small>server/gameLogic.js</small>")
+    end
+    subgraph build_graph_package_json_4e40bfbd["package.json"]
+        package_582681c2("package.json")
+        ref_google_genai_bf91b9a0("@google/genai<br/><small>package.json</small>")
+        ref_dotenv_f23d7946("dotenv<br/><small>package.json</small>")
+        ref_express_54e0f975("express<br/><small>package.json</small>")
+        package_dependencies_google_genai_1da26732("@google/genai@^2.32.0<br/><small>package.json</small>")
+    end
+    subgraph build_graph_server_index_js_25535189["server/index.js"]
+        server_index_c89add23("index.js")
+        server_index_createapp_1c871719("createApp()<br/><small>server/index.js</small>")
+        server_index_ratelimit_dd5af9c7("rateLimit()<br/><small>server/index.js</small>")
+    end
+    subgraph build_graph_External_generated_653891f5["External / generated"]
+        ref_node_path_350e6c64("ref_node_path")
+        ref_node_url_a44e0198("ref_node_url")
+    end
+    server_prompts_buildsystemprompt_86c8937d("buildSystemPrompt()<br/><small>server/prompts.js</small>")
+    server_index_createapp_1c871719 -->|calls| server_gamelogic_validateplayermessage_128c37ca
+    server_index_createapp_1c871719 -->|calls| server_gamelogic_isunintelligible_5a0a672d
+    server_index_createapp_1c871719 -->|calls| server_prompts_buildsystemprompt_86c8937d
+    server_index_createapp_1c871719 -->|calls| server_gamelogic_nextquestionkind_1c799780
+    server_index_createapp_1c871719 -->|calls| server_gamelogic_stage1transcripttext_41921c97
+    server_index_createapp_1c871719 -->|calls| server_gamelogic_validateairesponse_d25a9a10
+    server_index_createapp_1c871719 -->|calls| server_index_ratelimit_dd5af9c7
+    server_index_createapp_1c871719 -->|calls| server_gamelogic_publicstate_68d029fc
+    package_582681c2 -->|imports| ref_google_genai_bf91b9a0
+    package_582681c2 -->|imports| ref_dotenv_f23d7946
+    package_582681c2 -->|imports| ref_express_54e0f975
+    server_index_c89add23 -->|imports| server_prompts_buildsystemprompt_86c8937d
+    server_index_c89add23 -->|imports| server_gamelogic_createsessionstore_0260ef44
+    server_index_c89add23 -->|imports| server_gamelogic_isunintelligible_5a0a672d
+    server_index_c89add23 -->|imports| server_gamelogic_nextquestionkind_1c799780
+    server_index_c89add23 -->|imports| server_gamelogic_publicstate_68d029fc
+    server_index_c89add23 -->|imports| server_gamelogic_stage1transcripttext_41921c97
+    server_index_c89add23 -->|imports| server_gamelogic_validateairesponse_d25a9a10
+    server_index_c89add23 -->|imports| server_gamelogic_validateplayermessage_128c37ca
+    server_index_c89add23 -->|imports| ref_dotenv_f23d7946
+    server_index_c89add23 -->|imports| ref_express_54e0f975
+    server_index_c89add23 -->|imports| ref_node_path_350e6c64
+    server_index_c89add23 -->|imports| ref_node_url_a44e0198
+    %% Omitted for readability: 19 nodes, 0 edges
+    class server_gamelogic_validateplayermessage_128c37ca function;
+    class server_gamelogic_isunintelligible_5a0a672d function;
+    class server_gamelogic_nextquestionkind_1c799780 function;
+    class server_gamelogic_stage1transcripttext_41921c97 function;
+    class server_gamelogic_validateairesponse_d25a9a10 function;
+    class server_gamelogic_publicstate_68d029fc function;
+    class server_gamelogic_createsessionstore_0260ef44 ui;
+    class package_582681c2 function;
+    class ref_google_genai_bf91b9a0 function;
+    class ref_dotenv_f23d7946 function;
+    class ref_express_54e0f975 function;
+    class package_dependencies_google_genai_1da26732 function;
+    class server_index_c89add23 module;
+    class server_index_createapp_1c871719 function;
+    class server_index_ratelimit_dd5af9c7 function;
+    class ref_node_path_350e6c64 function;
+    class ref_node_url_a44e0198 function;
+    class server_prompts_buildsystemprompt_86c8937d function;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>package.json</code><br><small style="color:var(--muted)">package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>@google/genai</code><br><small style="color:var(--muted)">package.json</small><br><code>dotenv</code><br><small style="color:var(--muted)">package.json</small><br><code>express</code><br><small style="color:var(--muted)">package.json</small></td>
+  <td>package.json node in package.json.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>dependencies</code><br><small style="color:var(--muted)">package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>dependencies node in package.json.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>dotenv@^16.4.5</code><br><small style="color:var(--muted)">package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>dotenv@^16.4.5 node in package.json.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>express@^4.21.2</code><br><small style="color:var(--muted)">package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>express@^4.21.2 node in package.json.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>@google/genai@^2.32.0</code><br><small style="color:var(--muted)">package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>@google/genai@^2.32.0 node in package.json.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>description</code><br><small style="color:var(--muted)">package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>description node in package.json.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>engines</code><br><small style="color:var(--muted)">package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>engines node in package.json.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>node</code><br><small style="color:var(--muted)">package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>node node in package.json.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>keywords</code><br><small style="color:var(--muted)">package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>keywords node in package.json.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>license</code><br><small style="color:var(--muted)">package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>license node in package.json.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>main</code><br><small style="color:var(--muted)">package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>main node in package.json.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>name</code><br><small style="color:var(--muted)">package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>name node in package.json.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>scripts</code><br><small style="color:var(--muted)">package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>scripts node in package.json.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>check</code><br><small style="color:var(--muted)">package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>check node in package.json.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><code>dev</code><br><small style="color:var(--muted)">package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>dev node in package.json.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><code>start</code><br><small style="color:var(--muted)">package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>start node in package.json.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td><code>test</code><br><small style="color:var(--muted)">package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td><code>type</code><br><small style="color:var(--muted)">package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>type node in package.json.</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td><code>version</code><br><small style="color:var(--muted)">package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>version node in package.json.</td>
+</tr>
+<tr>
+  <td>20</td>
+  <td><code>dotenv</code><br><small style="color:var(--muted)">package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>checkGemma.js</code><br><small style="color:var(--muted)">server/checkGemma.js</small><br><code>index.js</code><br><small style="color:var(--muted)">server/index.js</small><br><code>package.json</code><br><small style="color:var(--muted)">package.json</small></td>
+  <td>No direct outbound edge</td>
+  <td>dotenv node in package.json.</td>
+</tr>
+<tr>
+  <td>21</td>
+  <td><code>express</code><br><small style="color:var(--muted)">package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>index.js</code><br><small style="color:var(--muted)">server/index.js</small><br><code>package.json</code><br><small style="color:var(--muted)">package.json</small></td>
+  <td>No direct outbound edge</td>
+  <td>express node in package.json.</td>
+</tr>
+<tr>
+  <td>22</td>
+  <td><code>@google/genai</code><br><small style="color:var(--muted)">package.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>game.test.js</code><br><small style="color:var(--muted)">test/game.test.js</small><br><code>gemma.js</code><br><small style="color:var(--muted)">server/gemma.js</small><br><code>package.json</code><br><small style="color:var(--muted)">package.json</small></td>
+  <td>No direct outbound edge</td>
+  <td>@google/genai node in package.json.</td>
+</tr>
+<tr>
+  <td>23</td>
+  <td><code>createSessionStore()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>index.js</code><br><small style="color:var(--muted)">server/index.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>createSessionStore() node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>24</td>
+  <td><code>prune()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>prune() node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>25</td>
+  <td><code>isUnintelligible()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>createApp()</code><br><small style="color:var(--muted)">server/index.js</small><br><code>game.test.js</code><br><small style="color:var(--muted)">test/game.test.js</small><br><code>index.js</code><br><small style="color:var(--muted)">server/index.js</small></td>
+  <td><code>looksLikeGibberishWord()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td>isUnintelligible() node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>26</td>
+  <td><code>nextQuestionKind()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>applyTurn()</code><br><small style="color:var(--muted)">server/gameLogic.js</small><br><code>createApp()</code><br><small style="color:var(--muted)">server/index.js</small><br><code>game.test.js</code><br><small style="color:var(--muted)">test/game.test.js</small><br>+1 more</td>
+  <td>No direct outbound edge</td>
+  <td>nextQuestionKind() node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>27</td>
+  <td><code>publicState()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>createApp()</code><br><small style="color:var(--muted)">server/index.js</small><br><code>index.js</code><br><small style="color:var(--muted)">server/index.js</small></td>
+  <td><code>goalsFor()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td>publicState() node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>28</td>
+  <td><code>stage1TranscriptText()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>createApp()</code><br><small style="color:var(--muted)">server/index.js</small><br><code>index.js</code><br><small style="color:var(--muted)">server/index.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>stage1TranscriptText() node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>29</td>
+  <td><code>validateAiResponse()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>createApp()</code><br><small style="color:var(--muted)">server/index.js</small><br><code>game.test.js</code><br><small style="color:var(--muted)">test/game.test.js</small><br><code>index.js</code><br><small style="color:var(--muted)">server/index.js</small><br>+1 more</td>
+  <td><code>cleanString()</code><br><small style="color:var(--muted)">server/gameLogic.js</small><br><code>InvalidAiResponseError</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td>validateAiResponse() node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>30</td>
+  <td><code>validatePlayerMessage()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>createApp()</code><br><small style="color:var(--muted)">server/index.js</small><br><code>index.js</code><br><small style="color:var(--muted)">server/index.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>validatePlayerMessage() node in server/gameLogic.js.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>package.json</code></td><td>22 nodes</td></tr>
+<tr><td><code>server/gameLogic.js</code></td><td>8 nodes</td></tr>
+<tr><td><code>server/index.js</code></td><td>4 nodes</td></tr>
+<tr><td><code>server/prompts.js</code></td><td>1 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x22, imports x11, calls x8, imports x4. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 3. Tests & Fixtures ====== -->
+<h2 id="tests-fixtures">3. Tests &amp; Fixtures</h2>
+<p>Tests &amp; Fixtures groups implementation around server, gemmajs, test, gametestjs, mostly in server/gemma.js, test/game.test.js, server/gameLogic.js. This section covers 23 nodes and 38 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Tests &amp; Fixtures (23 nodes, 38 edges)
+    subgraph tests_fixtures_server_gemma_js_d5bf9643["server/gemma.js"]
+        server_gemma_creategemmaclient_c58c2ffc("createGemmaClient()<br/><small>server/gemma.js</small>")
+        server_gemma_gemmaerror_e206d03f("GemmaError<br/><small>server/gemma.js</small>")
+        server_gemma_gemmaerror_constructor_5e240fe9("constructor()<br/><small>server/gemma.js</small>")
+        server_gemma_assertgemmamodel_868f5981("assertGemmaModel()<br/><small>server/gemma.js</small>")
+        server_gemma_generateturnwith_a42d8f29("generateTurnWith()<br/><small>server/gemma.js</small>")
+        server_gemma_togemmaerror_a72bb506("toGemmaError()<br/><small>server/gemma.js</small>")
+        server_gemma_5b2f628f("gemma.js")
+    end
+    subgraph tests_fixtures_test_game_test_js_b5e11b86["test/game.test.js"]
+        test_game_test_91885757("game.test.js")
+        test_game_test_correct_ad4522c6("correct()<br/><small>test/game.test.js</small>")
+        test_game_test_turn_d40b9e93("turn()<br/><small>test/game.test.js</small>")
+        test_game_test_wrong_9eb231fa("wrong()<br/><small>test/game.test.js</small>")
+        test_game_test_ai_6bc014b9("ai()<br/><small>test/game.test.js</small>")
+    end
+    subgraph tests_fixtures_server_gameLogic_js_b37daee9["server/gameLogic.js"]
+        server_gamelogic_invalidairesponseerror_c1cf2542("InvalidAiResponseError<br/><small>server/gameLogic.js</small>")
+        server_gamelogic_invalidairesponseerror_construc_6f39eeaf("constructor()<br/><small>server/gameLogic.js</small>")
+        server_gamelogic_parseaijson_31458c06("parseAiJson()<br/><small>server/gameLogic.js</small>")
+        server_gamelogic_creategamestate_251a235c("createGameState()<br/><small>server/gameLogic.js</small>")
+    end
+    ref_node_test_8d892955("ref_node_test")
+    server_checkgemma_d449b91a("checkGemma.js")
+    server_gamelogic_invalidairesponseerror_c1cf2542 -->|method| server_gamelogic_invalidairesponseerror_construc_6f39eeaf
+    server_gemma_gemmaerror_e206d03f -->|method| server_gemma_gemmaerror_constructor_5e240fe9
+    server_gamelogic_parseaijson_31458c06 -->|calls| server_gamelogic_invalidairesponseerror_c1cf2542
+    server_gemma_creategemmaclient_c58c2ffc -->|calls| server_gemma_assertgemmamodel_868f5981
+    server_gemma_creategemmaclient_c58c2ffc -->|calls| server_gemma_generateturnwith_a42d8f29
+    server_gemma_generateturnwith_a42d8f29 -->|calls| server_gamelogic_parseaijson_31458c06
+    server_gemma_generateturnwith_a42d8f29 -->|calls| server_gemma_togemmaerror_a72bb506
+    server_gemma_togemmaerror_a72bb506 -->|calls| server_gemma_gemmaerror_e206d03f
+    test_game_test_correct_ad4522c6 -->|calls| test_game_test_ai_6bc014b9
+    test_game_test_turn_d40b9e93 -->|calls| test_game_test_ai_6bc014b9
+    test_game_test_wrong_9eb231fa -->|calls| test_game_test_ai_6bc014b9
+    server_checkgemma_d449b91a -->|imports| server_gemma_creategemmaclient_c58c2ffc
+    server_checkgemma_d449b91a -->|imports| server_gemma_5b2f628f
+    server_gemma_5b2f628f -->|imports| server_gamelogic_invalidairesponseerror_c1cf2542
+    server_gemma_5b2f628f -->|imports| server_gamelogic_parseaijson_31458c06
+    test_game_test_91885757 -->|imports| server_gamelogic_creategamestate_251a235c
+    test_game_test_91885757 -->|imports| server_gamelogic_invalidairesponseerror_c1cf2542
+    test_game_test_91885757 -->|imports| server_gamelogic_parseaijson_31458c06
+    test_game_test_91885757 -->|imports| server_gemma_assertgemmamodel_868f5981
+    test_game_test_91885757 -->|imports| server_gemma_gemmaerror_e206d03f
+    test_game_test_91885757 -->|imports| server_gemma_generateturnwith_a42d8f29
+    test_game_test_91885757 -->|imports| server_gemma_togemmaerror_a72bb506
+    test_game_test_91885757 -->|imports| ref_node_test_8d892955
+    test_game_test_91885757 -->|imports| server_gemma_5b2f628f
+    %% Omitted for readability: 5 nodes, 0 edges
+    class server_gemma_creategemmaclient_c58c2ffc entry;
+    class server_gemma_gemmaerror_e206d03f klass;
+    class server_gemma_gemmaerror_constructor_5e240fe9 function;
+    class server_gemma_assertgemmamodel_868f5981 async;
+    class server_gemma_generateturnwith_a42d8f29 function;
+    class server_gemma_togemmaerror_a72bb506 function;
+    class server_gemma_5b2f628f module;
+    class test_game_test_91885757 test;
+    class test_game_test_correct_ad4522c6 test;
+    class test_game_test_turn_d40b9e93 test;
+    class test_game_test_wrong_9eb231fa test;
+    class test_game_test_ai_6bc014b9 test;
+    class server_gamelogic_invalidairesponseerror_c1cf2542 klass;
+    class server_gamelogic_invalidairesponseerror_construc_6f39eeaf function;
+    class server_gamelogic_parseaijson_31458c06 function;
+    class server_gamelogic_creategamestate_251a235c function;
+    class ref_node_test_8d892955 function;
+    class server_checkgemma_d449b91a module;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>InvalidAiResponseError</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td><code>game.test.js</code><br><small style="color:var(--muted)">test/game.test.js</small><br><code>gemma.js</code><br><small style="color:var(--muted)">server/gemma.js</small><br><code>index.js</code><br><small style="color:var(--muted)">server/index.js</small><br>+2 more</td>
+  <td><code>constructor()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td>InvalidAiResponseError node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>GemmaError</code><br><small style="color:var(--muted)">server/gemma.js</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td><code>game.test.js</code><br><small style="color:var(--muted)">test/game.test.js</small><br><code>index.js</code><br><small style="color:var(--muted)">server/index.js</small><br><code>toGemmaError()</code><br><small style="color:var(--muted)">server/gemma.js</small></td>
+  <td><code>constructor()</code><br><small style="color:var(--muted)">server/gemma.js</small></td>
+  <td>GemmaError node in server/gemma.js.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>createGameState()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>game.test.js</code><br><small style="color:var(--muted)">test/game.test.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>createGameState() node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>.constructor()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>InvalidAiResponseError</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>.constructor() node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>parseAiJson()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>game.test.js</code><br><small style="color:var(--muted)">test/game.test.js</small><br><code>gemma.js</code><br><small style="color:var(--muted)">server/gemma.js</small><br><code>generateTurnWith()</code><br><small style="color:var(--muted)">server/gemma.js</small></td>
+  <td><code>InvalidAiResponseError</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td>parseAiJson() node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>assertGemmaModel()</code><br><small style="color:var(--muted)">server/gemma.js</small></td>
+  <td><span class="tag tag-async">Async</span></td>
+  <td><code>createGemmaClient()</code><br><small style="color:var(--muted)">server/gemma.js</small><br><code>game.test.js</code><br><small style="color:var(--muted)">test/game.test.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>assertGemmaModel() node in server/gemma.js.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>createGemmaClient()</code><br><small style="color:var(--muted)">server/gemma.js</small></td>
+  <td><span class="tag tag-cmd">Entry</span></td>
+  <td><code>checkGemma.js</code><br><small style="color:var(--muted)">server/checkGemma.js</small><br><code>index.js</code><br><small style="color:var(--muted)">server/index.js</small></td>
+  <td><code>assertGemmaModel()</code><br><small style="color:var(--muted)">server/gemma.js</small><br><code>callModel()</code><br><small style="color:var(--muted)">server/gemma.js</small><br><code>generateTurnWith()</code><br><small style="color:var(--muted)">server/gemma.js</small></td>
+  <td>createGemmaClient() node in server/gemma.js.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>callModel()</code><br><small style="color:var(--muted)">server/gemma.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>createGemmaClient()</code><br><small style="color:var(--muted)">server/gemma.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>callModel() node in server/gemma.js.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>.constructor()</code><br><small style="color:var(--muted)">server/gemma.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>GemmaError</code><br><small style="color:var(--muted)">server/gemma.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>.constructor() node in server/gemma.js.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>generateTurnWith()</code><br><small style="color:var(--muted)">server/gemma.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>createGemmaClient()</code><br><small style="color:var(--muted)">server/gemma.js</small><br><code>game.test.js</code><br><small style="color:var(--muted)">test/game.test.js</small></td>
+  <td><code>parseAiJson()</code><br><small style="color:var(--muted)">server/gameLogic.js</small><br><code>toGemmaError()</code><br><small style="color:var(--muted)">server/gemma.js</small></td>
+  <td>generateTurnWith() node in server/gemma.js.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>toGemmaError()</code><br><small style="color:var(--muted)">server/gemma.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>game.test.js</code><br><small style="color:var(--muted)">test/game.test.js</small><br><code>generateTurnWith()</code><br><small style="color:var(--muted)">server/gemma.js</small></td>
+  <td><code>GemmaError</code><br><small style="color:var(--muted)">server/gemma.js</small></td>
+  <td>toGemmaError() node in server/gemma.js.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>ai()</code><br><small style="color:var(--muted)">test/game.test.js</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td><code>correct()</code><br><small style="color:var(--muted)">test/game.test.js</small><br><code>turn()</code><br><small style="color:var(--muted)">test/game.test.js</small><br><code>wrong()</code><br><small style="color:var(--muted)">test/game.test.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>ai() node in test/game.test.js.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>correct()</code><br><small style="color:var(--muted)">test/game.test.js</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>ai()</code><br><small style="color:var(--muted)">test/game.test.js</small></td>
+  <td>correct() node in test/game.test.js.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>fakeGemma()</code><br><small style="color:var(--muted)">test/game.test.js</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>fakeGemma() node in test/game.test.js.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><code>say()</code><br><small style="color:var(--muted)">test/game.test.js</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>say() node in test/game.test.js.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><code>turn()</code><br><small style="color:var(--muted)">test/game.test.js</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>ai()</code><br><small style="color:var(--muted)">test/game.test.js</small><br><code>applyTurn()</code><br><small style="color:var(--muted)">server/gameLogic.js</small><br><code>validateAiResponse()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td>turn() node in test/game.test.js.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td><code>withServer()</code><br><small style="color:var(--muted)">test/game.test.js</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>createApp()</code><br><small style="color:var(--muted)">server/index.js</small></td>
+  <td>withServer() node in test/game.test.js.</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td><code>wrong()</code><br><small style="color:var(--muted)">test/game.test.js</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>ai()</code><br><small style="color:var(--muted)">test/game.test.js</small></td>
+  <td>wrong() node in test/game.test.js.</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td><code>checkGemma.js</code><br><small style="color:var(--muted)">server/checkGemma.js</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>createGemmaClient()</code><br><small style="color:var(--muted)">server/gemma.js</small><br><code>dotenv</code><br><small style="color:var(--muted)">package.json</small><br><code>gemma.js</code><br><small style="color:var(--muted)">server/gemma.js</small></td>
+  <td>checkGemma.js node in server/checkGemma.js.</td>
+</tr>
+<tr>
+  <td>20</td>
+  <td><code>gemma.js</code><br><small style="color:var(--muted)">server/gemma.js</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td><code>checkGemma.js</code><br><small style="color:var(--muted)">server/checkGemma.js</small><br><code>game.test.js</code><br><small style="color:var(--muted)">test/game.test.js</small><br><code>index.js</code><br><small style="color:var(--muted)">server/index.js</small></td>
+  <td><code>@google/genai</code><br><small style="color:var(--muted)">package.json</small><br><code>gameLogic.js</code><br><small style="color:var(--muted)">server/gameLogic.js</small><br><code>InvalidAiResponseError</code><br><small style="color:var(--muted)">server/gameLogic.js</small><br>+3 more</td>
+  <td>gemma.js node in server/gemma.js.</td>
+</tr>
+<tr>
+  <td>21</td>
+  <td><code>game.test.js</code><br><small style="color:var(--muted)">test/game.test.js</small></td>
+  <td><span class="tag tag-func">Test</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>@google/genai</code><br><small style="color:var(--muted)">package.json</small><br><code>applyTurn()</code><br><small style="color:var(--muted)">server/gameLogic.js</small><br><code>assertGemmaModel()</code><br><small style="color:var(--muted)">server/gemma.js</small><br>+24 more</td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+<tr>
+  <td>22</td>
+  <td><code>ref_node_assert</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-async">Async</span></td>
+  <td><code>game.test.js</code><br><small style="color:var(--muted)">test/game.test.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>ref_node_assert node in project.</td>
+</tr>
+<tr>
+  <td>23</td>
+  <td><code>ref_node_test</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>game.test.js</code><br><small style="color:var(--muted)">test/game.test.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>Verifies imports, entry points, or version behavior.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>server/gemma.js</code></td><td>8 nodes</td></tr>
+<tr><td><code>test/game.test.js</code></td><td>8 nodes</td></tr>
+<tr><td><code>server/gameLogic.js</code></td><td>4 nodes</td></tr>
+<tr><td><code>server/checkGemma.js</code></td><td>1 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x12, imports x10, calls x9, imports x4. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 4. Frontend: chat, typing, meter, overlays ====== -->
+<h2 id="frontend-chat-typing-meter-overlays">4. Frontend: chat, typing, meter, overlays</h2>
+<p>Frontend: chat, typing, meter, overlays groups implementation around scriptjs, public, adddivider, addmessage, mostly in public/script.js, README.md. This section covers 37 nodes and 100 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Frontend: chat, typing, meter, overlays (37 nodes, 100 edges)
+    public_script_send_20e03e69("send()<br/><small>public/script.js</small>")
+    public_script_renderall_cccbb21b("renderAll()<br/><small>public/script.js</small>")
+    public_script_restart_683ea6b1("restart()<br/><small>public/script.js</small>")
+    public_script_start_93e9b9a2("start()<br/><small>public/script.js</small>")
+    public_script_typemessage_step_f0e913fc("step()<br/><small>public/script.js</small>")
+    public_script_typemessage_15a39cae("typeMessage()<br/><small>public/script.js</small>")
+    public_script_adddivider_d7d6c9c1("addDivider()<br/><small>public/script.js</small>")
+    public_script_el_dd705186("el()<br/><small>public/script.js</small>")
+    public_script_addmessage_9d7381a8("addMessage()<br/><small>public/script.js</small>")
+    public_script_scrolltobottom_e3195898("scrollToBottom()<br/><small>public/script.js</small>")
+    public_script_addsystem_ab19ba94("addSystem()<br/><small>public/script.js</small>")
+    public_script_renderstatic_d9c88a9a("renderStatic()<br/><small>public/script.js</small>")
+    public_script_renderheader_0779ef7c("renderHeader()<br/><small>public/script.js</small>")
+    public_script_renderchecklist_11489495("renderChecklist()<br/><small>public/script.js</small>")
+    public_script_rendertranscript_59173707("renderTranscript()<br/><small>public/script.js</small>")
+    public_script_setcomposerenabled_c944704c("setComposerEnabled()<br/><small>public/script.js</small>")
+    public_script_setsuspicion_9328308f("setSuspicion()<br/><small>public/script.js</small>")
+    public_script_showwin_475daeb3("showWin()<br/><small>public/script.js</small>")
+    public_script_adddivider_d7d6c9c1 -->|calls| public_script_el_dd705186
+    public_script_addmessage_9d7381a8 -->|calls| public_script_el_dd705186
+    public_script_addmessage_9d7381a8 -->|calls| public_script_scrolltobottom_e3195898
+    public_script_addsystem_ab19ba94 -->|calls| public_script_el_dd705186
+    public_script_addsystem_ab19ba94 -->|calls| public_script_scrolltobottom_e3195898
+    public_script_renderall_cccbb21b -->|calls| public_script_renderstatic_d9c88a9a
+    public_script_renderall_cccbb21b -->|calls| public_script_renderheader_0779ef7c
+    public_script_renderall_cccbb21b -->|calls| public_script_renderchecklist_11489495
+    public_script_renderall_cccbb21b -->|calls| public_script_rendertranscript_59173707
+    public_script_renderall_cccbb21b -->|calls| public_script_adddivider_d7d6c9c1
+    public_script_renderall_cccbb21b -->|calls| public_script_typemessage_15a39cae
+    public_script_renderall_cccbb21b -->|calls| public_script_setcomposerenabled_c944704c
+    public_script_renderall_cccbb21b -->|calls| public_script_setsuspicion_9328308f
+    public_script_renderall_cccbb21b -->|calls| public_script_showwin_475daeb3
+    public_script_renderchecklist_11489495 -->|calls| public_script_el_dd705186
+    public_script_rendertranscript_59173707 -->|calls| public_script_adddivider_d7d6c9c1
+    public_script_rendertranscript_59173707 -->|calls| public_script_addmessage_9d7381a8
+    public_script_restart_683ea6b1 -->|calls| public_script_renderall_cccbb21b
+    public_script_send_20e03e69 -->|calls| public_script_setcomposerenabled_c944704c
+    public_script_send_20e03e69 -->|calls| public_script_addmessage_9d7381a8
+    public_script_send_20e03e69 -->|calls| public_script_scrolltobottom_e3195898
+    public_script_send_20e03e69 -->|calls| public_script_el_dd705186
+    public_script_send_20e03e69 -->|calls| public_script_typemessage_15a39cae
+    public_script_send_20e03e69 -->|calls| public_script_setsuspicion_9328308f
+    %% Omitted for readability: 19 nodes, 9 edges
+    class public_script_send_20e03e69 function;
+    class public_script_renderall_cccbb21b function;
+    class public_script_restart_683ea6b1 function;
+    class public_script_start_93e9b9a2 function;
+    class public_script_typemessage_step_f0e913fc function;
+    class public_script_typemessage_15a39cae function;
+    class public_script_adddivider_d7d6c9c1 function;
+    class public_script_el_dd705186 function;
+    class public_script_addmessage_9d7381a8 function;
+    class public_script_scrolltobottom_e3195898 function;
+    class public_script_addsystem_ab19ba94 function;
+    class public_script_renderstatic_d9c88a9a function;
+    class public_script_renderheader_0779ef7c function;
+    class public_script_renderchecklist_11489495 function;
+    class public_script_rendertranscript_59173707 function;
+    class public_script_setcomposerenabled_c944704c function;
+    class public_script_setsuspicion_9328308f function;
+    class public_script_showwin_475daeb3 function;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>addDivider()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>renderAll()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>renderTranscript()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>send()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><code>el()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td>addDivider() node in public/script.js.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>addMessage()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>renderTranscript()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>send()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><code>el()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>scrollToBottom()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td>addMessage() node in public/script.js.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>addSystem()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>send()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><code>el()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>scrollToBottom()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td>addSystem() node in public/script.js.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>api()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><span class="tag tag-endpoint">API</span></td>
+  <td><code>restart()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>send()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>start()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>api() node in public/script.js.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>autoResize()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>send()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>autoResize() node in public/script.js.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>clearError()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>restart()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>send()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>clearError() node in public/script.js.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>el()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>addDivider()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>addMessage()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>addSystem()</code><br><small style="color:var(--muted)">public/script.js</small><br>+5 more</td>
+  <td>No direct outbound edge</td>
+  <td>el() node in public/script.js.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>get()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>get() node in public/script.js.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>hideOverlay()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>restart()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>send()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>hideOverlay() node in public/script.js.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>renderAll()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>restart()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>start()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><code>addDivider()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>renderChecklist()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>renderHeader()</code><br><small style="color:var(--muted)">public/script.js</small><br>+7 more</td>
+  <td>renderAll() node in public/script.js.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>renderBriefing()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>renderStatic()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>send()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><code>el()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td>renderBriefing() node in public/script.js.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>renderChecklist()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>renderAll()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>send()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><code>el()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td>renderChecklist() node in public/script.js.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>renderHeader()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>renderAll()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>send()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>renderHeader() node in public/script.js.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>renderSoundBtn()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>renderSoundBtn() node in public/script.js.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><code>renderStatic()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>renderAll()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><code>renderBriefing()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td>renderStatic() node in public/script.js.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><code>renderTranscript()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>renderAll()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><code>addDivider()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>addMessage()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td>renderTranscript() node in public/script.js.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td><code>restart()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>send()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>showLoss()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>showWin()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><code>api()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>clearError()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>hideOverlay()</code><br><small style="color:var(--muted)">public/script.js</small><br>+2 more</td>
+  <td>restart() node in public/script.js.</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td><code>scrollToBottom()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>addMessage()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>addSystem()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>finish()</code><br><small style="color:var(--muted)">public/script.js</small><br>+3 more</td>
+  <td>No direct outbound edge</td>
+  <td>scrollToBottom() node in public/script.js.</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td><code>send()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>addDivider()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>addMessage()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>addSystem()</code><br><small style="color:var(--muted)">public/script.js</small><br>+18 more</td>
+  <td>send() node in public/script.js.</td>
+</tr>
+<tr>
+  <td>20</td>
+  <td><code>set()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>set() node in public/script.js.</td>
+</tr>
+<tr>
+  <td>21</td>
+  <td><code>setComposerEnabled()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>renderAll()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>send()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>setComposerEnabled() node in public/script.js.</td>
+</tr>
+<tr>
+  <td>22</td>
+  <td><code>setMood()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>setSuspicion()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>setMood() node in public/script.js.</td>
+</tr>
+<tr>
+  <td>23</td>
+  <td><code>setSuspicion()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>renderAll()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>send()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><code>setMood()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td>setSuspicion() node in public/script.js.</td>
+</tr>
+<tr>
+  <td>24</td>
+  <td><code>showError()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>restart()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>send()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>start()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>showError() node in public/script.js.</td>
+</tr>
+<tr>
+  <td>25</td>
+  <td><code>showLoss()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>renderAll()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>send()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><code>restart()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>showOverlay()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>turnsTaken()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td>showLoss() node in public/script.js.</td>
+</tr>
+<tr>
+  <td>26</td>
+  <td><code>showOverlay()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>send()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>showLoss()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>showWin()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><code>el()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td>showOverlay() node in public/script.js.</td>
+</tr>
+<tr>
+  <td>27</td>
+  <td><code>showWin()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>renderAll()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>send()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><code>restart()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>showOverlay()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>turnsTaken()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td>showWin() node in public/script.js.</td>
+</tr>
+<tr>
+  <td>28</td>
+  <td><code>start()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>api()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>renderAll()</code><br><small style="color:var(--muted)">public/script.js</small><br><code>showError()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td>start() node in public/script.js.</td>
+</tr>
+<tr>
+  <td>29</td>
+  <td><code>startTypingSound()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>typeMessage()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>startTypingSound() node in public/script.js.</td>
+</tr>
+<tr>
+  <td>30</td>
+  <td><code>stopTypingSound()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>finish()</code><br><small style="color:var(--muted)">public/script.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>stopTypingSound() node in public/script.js.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>public/script.js</code></td><td>36 nodes</td></tr>
+<tr><td><code>README.md</code></td><td>1 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: calls x61, contains x33, indirect call x5, references x1. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 5. Scoring rules & constants ====== -->
+<h2 id="scoring-rules-constants">5. Scoring rules &amp; constants</h2>
+<p>Scoring rules &amp; constants groups implementation around gamelogicjs, server, change, suspicion, mostly in server/gameLogic.js. This section covers 19 nodes and 18 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Scoring rules &amp; constants (19 nodes, 18 edges)
+    subgraph scoring_rules_constants_server_gameLogic_js_7224a8ae["server/gameLogic.js"]
+        server_gamelogic_7ca144d2("gameLogic.js")
+        server_gamelogic_correct_answer_change_ea92417c("CORRECT_ANSWER_CHANGE<br/><small>server/gameLogic.js</small>")
+        server_gamelogic_formal_markers_cf06e5c2("FORMAL_MARKERS<br/><small>server/gameLogic.js</small>")
+        server_gamelogic_interjections_5143a30f("INTERJECTIONS<br/><small>server/gameLogic.js</small>")
+        server_gamelogic_keyboard_rows_b4c161f2("KEYBOARD_ROWS<br/><small>server/gameLogic.js</small>")
+        server_gamelogic_max_message_length_c68a196e("MAX_MESSAGE_LENGTH<br/><small>server/gameLogic.js</small>")
+        server_gamelogic_max_suspicion_41f79ba5("MAX_SUSPICION<br/><small>server/gameLogic.js</small>")
+        server_gamelogic_min_suspicion_85370d34("MIN_SUSPICION<br/><small>server/gameLogic.js</small>")
+        server_gamelogic_name_change_penalty_a0dcbd88("NAME_CHANGE_PENALTY<br/><small>server/gameLogic.js</small>")
+        server_gamelogic_rude_markers_3e6fc2b1("RUDE_MARKERS<br/><small>server/gameLogic.js</small>")
+        server_gamelogic_start_suspicion_bff96e6d("START_SUSPICION<br/><small>server/gameLogic.js</small>")
+        server_gamelogic_tones_5572031e("TONES<br/><small>server/gameLogic.js</small>")
+        server_gamelogic_tone_change_c6799101("TONE_CHANGE<br/><small>server/gameLogic.js</small>")
+        server_gamelogic_unintelligible_penalty_afce56ef("UNINTELLIGIBLE_PENALTY<br/><small>server/gameLogic.js</small>")
+        server_gamelogic_wrong_answer_change_21175cbb("WRONG_ANSWER_CHANGE<br/><small>server/gameLogic.js</small>")
+        server_gamelogic_cleanstring_d4e2edbf("cleanString()<br/><small>server/gameLogic.js</small>")
+        server_gamelogic_goalsfor_1335e44d("goalsFor()<br/><small>server/gameLogic.js</small>")
+    end
+    ref_node_crypto_6ccf7818("ref_node_crypto")
+    server_gamelogic_7ca144d2 -->|imports| ref_node_crypto_6ccf7818
+    %% Omitted for readability: 1 nodes, 0 edges
+    class server_gamelogic_7ca144d2 module;
+    class server_gamelogic_correct_answer_change_ea92417c klass;
+    class server_gamelogic_formal_markers_cf06e5c2 klass;
+    class server_gamelogic_interjections_5143a30f klass;
+    class server_gamelogic_keyboard_rows_b4c161f2 klass;
+    class server_gamelogic_max_message_length_c68a196e klass;
+    class server_gamelogic_max_suspicion_41f79ba5 klass;
+    class server_gamelogic_min_suspicion_85370d34 klass;
+    class server_gamelogic_name_change_penalty_a0dcbd88 klass;
+    class server_gamelogic_rude_markers_3e6fc2b1 klass;
+    class server_gamelogic_start_suspicion_bff96e6d klass;
+    class server_gamelogic_tones_5572031e klass;
+    class server_gamelogic_tone_change_c6799101 klass;
+    class server_gamelogic_unintelligible_penalty_afce56ef klass;
+    class server_gamelogic_wrong_answer_change_21175cbb klass;
+    class server_gamelogic_cleanstring_d4e2edbf function;
+    class server_gamelogic_goalsfor_1335e44d function;
+    class ref_node_crypto_6ccf7818 function;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>cleanString()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>validateAiResponse()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>cleanString() node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>goalsFor()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>publicState()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>goalsFor() node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>looksLikeGibberishWord()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>isUnintelligible()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>looksLikeGibberishWord() node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>gameLogic.js</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td><code>game.test.js</code><br><small style="color:var(--muted)">test/game.test.js</small><br><code>gemma.js</code><br><small style="color:var(--muted)">server/gemma.js</small><br><code>index.js</code><br><small style="color:var(--muted)">server/index.js</small></td>
+  <td><code>BRIEFING</code><br><small style="color:var(--muted)">server/prompts.js</small><br><code>BRIEFING_QUESTIONS</code><br><small style="color:var(--muted)">server/prompts.js</small><br><code>DOSSIER</code><br><small style="color:var(--muted)">server/prompts.js</small><br>+5 more</td>
+  <td>gameLogic.js node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>CORRECT_ANSWER_CHANGE</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>CORRECT_ANSWER_CHANGE node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>FORMAL_MARKERS</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>FORMAL_MARKERS node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>INTERJECTIONS</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>INTERJECTIONS node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>KEYBOARD_ROWS</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>KEYBOARD_ROWS node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>MAX_MESSAGE_LENGTH</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>MAX_MESSAGE_LENGTH node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>MAX_SUSPICION</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>MAX_SUSPICION node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>MIN_SUSPICION</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>MIN_SUSPICION node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>NAME_CHANGE_PENALTY</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>NAME_CHANGE_PENALTY node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>RUDE_MARKERS</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>RUDE_MARKERS node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>START_SUSPICION</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>START_SUSPICION node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><code>TONE_CHANGE</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>TONE_CHANGE node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><code>TONES</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>TONES node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td><code>UNINTELLIGIBLE_PENALTY</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>UNINTELLIGIBLE_PENALTY node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td><code>WRONG_ANSWER_CHANGE</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>WRONG_ANSWER_CHANGE node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td><code>ref_node_crypto</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>gameLogic.js</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>ref_node_crypto node in project.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>server/gameLogic.js</code></td><td>18 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x17, imports x1. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 6. README docs ====== -->
+<h2 id="readme-docs">6. README docs</h2>
+<p>README docs groups implementation around readmemd, how, api, routes, mostly in README.md. This section covers 19 nodes and 18 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: README docs (19 nodes, 18 edges)
+    readme_vault_protocol_2cbcec20("🔓 Vault Protocol<br/><small>README.md</small>")
+    readme_how_it_works_29d8907d("🏗️ How it works<br/><small>README.md</small>")
+    readme_how_to_play_8b4102bc("🎮 How to play<br/><small>README.md</small>")
+    readme_f78a71af("README.md")
+    readme_project_structure_2ab0b538("Project structure<br/><small>README.md</small>")
+    readme_api_routes_530395c5("API routes<br/><small>README.md</small>")
+    readme_scoring_728c7d5d("Scoring<br/><small>README.md</small>")
+    readme_winning_and_losing_25be9d10("Winning and losing<br/><small>README.md</small>")
+    readme_known_limitations_feb871d4("⚠️ Known limitations<br/><small>README.md</small>")
+    readme_features_e6f786b1("✨ Features<br/><small>README.md</small>")
+    readme_deploy_it_free_with_render_5531cdd8("🌍 Deploy it (free, with Render)<br/><small>README.md</small>")
+    readme_team_d8effcad("👥 Team<br/><small>README.md</small>")
+    readme_license_edbe4ad9("📄 License<br/><small>README.md</small>")
+    readme_the_story_29ba0812("📖 The story<br/><small>README.md</small>")
+    readme_security_notes_17bff4ea("🔐 Security notes<br/><small>README.md</small>")
+    readme_ideas_for_later_1cc15cc6("🔭 Ideas for later<br/><small>README.md</small>")
+    readme_credits_a27926b0("🙏 Credits<br/><small>README.md</small>")
+    readme_run_it_locally_1accb0fa("🚀 Run it locally<br/><small>README.md</small>")
+    readme_f78a71af -->|contains| readme_vault_protocol_2cbcec20
+    readme_how_it_works_29d8907d -->|contains| readme_project_structure_2ab0b538
+    readme_how_it_works_29d8907d -->|contains| readme_api_routes_530395c5
+    readme_how_to_play_8b4102bc -->|contains| readme_scoring_728c7d5d
+    readme_how_to_play_8b4102bc -->|contains| readme_winning_and_losing_25be9d10
+    readme_vault_protocol_2cbcec20 -->|contains| readme_the_story_29ba0812
+    readme_vault_protocol_2cbcec20 -->|contains| readme_run_it_locally_1accb0fa
+    readme_vault_protocol_2cbcec20 -->|contains| readme_deploy_it_free_with_render_5531cdd8
+    readme_vault_protocol_2cbcec20 -->|contains| readme_security_notes_17bff4ea
+    readme_vault_protocol_2cbcec20 -->|contains| readme_known_limitations_feb871d4
+    readme_vault_protocol_2cbcec20 -->|contains| readme_features_e6f786b1
+    readme_vault_protocol_2cbcec20 -->|contains| readme_ideas_for_later_1cc15cc6
+    readme_vault_protocol_2cbcec20 -->|contains| readme_credits_a27926b0
+    readme_vault_protocol_2cbcec20 -->|contains| readme_team_d8effcad
+    readme_vault_protocol_2cbcec20 -->|contains| readme_license_edbe4ad9
+    readme_vault_protocol_2cbcec20 -->|contains| readme_how_to_play_8b4102bc
+    readme_vault_protocol_2cbcec20 -->|contains| readme_how_it_works_29d8907d
+    %% Omitted for readability: 1 nodes, 0 edges
+    class readme_vault_protocol_2cbcec20 concept;
+    class readme_how_it_works_29d8907d concept;
+    class readme_how_to_play_8b4102bc concept;
+    class readme_f78a71af concept;
+    class readme_project_structure_2ab0b538 concept;
+    class readme_api_routes_530395c5 concept;
+    class readme_scoring_728c7d5d concept;
+    class readme_winning_and_losing_25be9d10 concept;
+    class readme_known_limitations_feb871d4 concept;
+    class readme_features_e6f786b1 concept;
+    class readme_deploy_it_free_with_render_5531cdd8 concept;
+    class readme_team_d8effcad concept;
+    class readme_license_edbe4ad9 concept;
+    class readme_the_story_29ba0812 concept;
+    class readme_security_notes_17bff4ea concept;
+    class readme_ideas_for_later_1cc15cc6 concept;
+    class readme_credits_a27926b0 concept;
+    class readme_run_it_locally_1accb0fa concept;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>README.md</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing README.md.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>API routes</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing API routes.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>🙏 Credits</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 🙏 Credits.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>🌍 Deploy it (free, with Render)</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 🌍 Deploy it (free, with Render).</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>✨ Features</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing ✨ Features.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>🏗️ How it works</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 🏗️ How it works.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>🎮 How to play</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 🎮 How to play.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>🔭 Ideas for later</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 🔭 Ideas for later.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>⚠️ Known limitations</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing ⚠️ Known limitations.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>📄 License</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 📄 License.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>Project structure</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Project structure.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>🚀 Run it locally</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 🚀 Run it locally.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>Scoring</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Scoring.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>🔐 Security notes</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 🔐 Security notes.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><code>👥 Team</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 👥 Team.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><code>🧰 Tech stack</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 🧰 Tech stack.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td><code>📖 The story</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 📖 The story.</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td><code>🔓 Vault Protocol</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 🔓 Vault Protocol.</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td><code>Winning and losing</code><br><small style="color:var(--muted)">README.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Winning and losing.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>README.md</code></td><td>19 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x18. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 7. Turn referee (applyTurn) ====== -->
+<h2 id="turn-referee-applyturn">7. Turn referee (applyTurn)</h2>
+<p>Turn referee (applyTurn) groups implementation around server, gamelogicjs, applyturn, claimsmanagersent, mostly in server/gameLogic.js. This section covers 9 nodes and 8 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Turn referee (applyTurn) (9 nodes, 8 edges)
+    server_gamelogic_applyturn_b910dc16("applyTurn()<br/><small>server/gameLogic.js</small>")
+    server_gamelogic_isdifferentname_699ef6a5("isDifferentName()<br/><small>server/gameLogic.js</small>")
+    server_gamelogic_pick_d617a2dd("pick()<br/><small>server/gameLogic.js</small>")
+    server_gamelogic_signed_174af4ee("signed()<br/><small>server/gameLogic.js</small>")
+    server_gamelogic_claimsmanagersent_15a6613f("claimsManagerSent()<br/><small>server/gameLogic.js</small>")
+    server_gamelogic_lastquestion_e2454fc9("lastQuestion()<br/><small>server/gameLogic.js</small>")
+    server_gamelogic_setpending_372ea68e("setPending()<br/><small>server/gameLogic.js</small>")
+    server_gamelogic_clamp_ee27d298("clamp()<br/><small>server/gameLogic.js</small>")
+    server_gamelogic_norm_c53364d1("norm()<br/><small>server/gameLogic.js</small>")
+    server_gamelogic_applyturn_b910dc16 -->|calls| server_gamelogic_pick_d617a2dd
+    server_gamelogic_applyturn_b910dc16 -->|calls| server_gamelogic_signed_174af4ee
+    server_gamelogic_applyturn_b910dc16 -->|calls| server_gamelogic_claimsmanagersent_15a6613f
+    server_gamelogic_applyturn_b910dc16 -->|calls| server_gamelogic_isdifferentname_699ef6a5
+    server_gamelogic_applyturn_b910dc16 -->|calls| server_gamelogic_lastquestion_e2454fc9
+    server_gamelogic_applyturn_b910dc16 -->|calls| server_gamelogic_setpending_372ea68e
+    server_gamelogic_applyturn_b910dc16 -->|calls| server_gamelogic_clamp_ee27d298
+    server_gamelogic_isdifferentname_699ef6a5 -->|calls| server_gamelogic_norm_c53364d1
+    class server_gamelogic_applyturn_b910dc16 function;
+    class server_gamelogic_isdifferentname_699ef6a5 function;
+    class server_gamelogic_pick_d617a2dd function;
+    class server_gamelogic_signed_174af4ee function;
+    class server_gamelogic_claimsmanagersent_15a6613f function;
+    class server_gamelogic_lastquestion_e2454fc9 function;
+    class server_gamelogic_setpending_372ea68e function;
+    class server_gamelogic_clamp_ee27d298 function;
+    class server_gamelogic_norm_c53364d1 function;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>applyTurn()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>createApp()</code><br><small style="color:var(--muted)">server/index.js</small><br><code>game.test.js</code><br><small style="color:var(--muted)">test/game.test.js</small><br><code>index.js</code><br><small style="color:var(--muted)">server/index.js</small><br>+1 more</td>
+  <td><code>claimsManagerSent()</code><br><small style="color:var(--muted)">server/gameLogic.js</small><br><code>clamp()</code><br><small style="color:var(--muted)">server/gameLogic.js</small><br><code>decideTone()</code><br><small style="color:var(--muted)">server/gameLogic.js</small><br>+6 more</td>
+  <td>applyTurn() node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>claimsManagerSent()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>applyTurn()</code><br><small style="color:var(--muted)">server/gameLogic.js</small><br><code>game.test.js</code><br><small style="color:var(--muted)">test/game.test.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>claimsManagerSent() node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>clamp()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>applyTurn()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>clamp() node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>isDifferentName()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>applyTurn()</code><br><small style="color:var(--muted)">server/gameLogic.js</small><br><code>game.test.js</code><br><small style="color:var(--muted)">test/game.test.js</small></td>
+  <td><code>norm()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td>isDifferentName() node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>lastQuestion()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>applyTurn()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>lastQuestion() node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>norm()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>isDifferentName()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>norm() node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>pick()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>applyTurn()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>pick() node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>setPending()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>applyTurn()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>setPending() node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>signed()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>applyTurn()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>signed() node in server/gameLogic.js.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>server/gameLogic.js</code></td><td>9 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: calls x8. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 8. Story data: stages, intel, questions ====== -->
+<h2 id="story-data-stages-intel-questions">8. Story data: stages, intel, questions</h2>
+<p>Story data: stages, intel, questions groups implementation around promptsjs, server, briefing, questions, mostly in server/prompts.js. This section covers 8 nodes and 7 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Story data: stages, intel, questions (8 nodes, 7 edges)
+    server_prompts_d37ac06d("prompts.js")
+    server_prompts_dossier_804d1375("DOSSIER<br/><small>server/prompts.js</small>")
+    server_prompts_briefing_96274ae5("BRIEFING<br/><small>server/prompts.js</small>")
+    server_prompts_json_repair_instruction_fce57c30("JSON_REPAIR_INSTRUCTION<br/><small>server/prompts.js</small>")
+    server_prompts_unintelligible_replies_7c32030b("UNINTELLIGIBLE_REPLIES<br/><small>server/prompts.js</small>")
+    server_prompts_briefing_questions_2204e0db("BRIEFING_QUESTIONS<br/><small>server/prompts.js</small>")
+    server_prompts_fallback_questions_7591a19f("FALLBACK_QUESTIONS<br/><small>server/prompts.js</small>")
+    server_prompts_stages_4cb52330("STAGES<br/><small>server/prompts.js</small>")
+    server_prompts_d37ac06d -->|contains| server_prompts_dossier_804d1375
+    server_prompts_d37ac06d -->|contains| server_prompts_briefing_96274ae5
+    server_prompts_d37ac06d -->|contains| server_prompts_json_repair_instruction_fce57c30
+    server_prompts_d37ac06d -->|contains| server_prompts_unintelligible_replies_7c32030b
+    server_prompts_d37ac06d -->|contains| server_prompts_briefing_questions_2204e0db
+    server_prompts_d37ac06d -->|contains| server_prompts_fallback_questions_7591a19f
+    server_prompts_d37ac06d -->|contains| server_prompts_stages_4cb52330
+    class server_prompts_d37ac06d module;
+    class server_prompts_dossier_804d1375 klass;
+    class server_prompts_briefing_96274ae5 klass;
+    class server_prompts_json_repair_instruction_fce57c30 klass;
+    class server_prompts_unintelligible_replies_7c32030b klass;
+    class server_prompts_briefing_questions_2204e0db klass;
+    class server_prompts_fallback_questions_7591a19f klass;
+    class server_prompts_stages_4cb52330 klass;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>prompts.js</code><br><small style="color:var(--muted)">server/prompts.js</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td><code>game.test.js</code><br><small style="color:var(--muted)">test/game.test.js</small><br><code>gameLogic.js</code><br><small style="color:var(--muted)">server/gameLogic.js</small><br><code>gemma.js</code><br><small style="color:var(--muted)">server/gemma.js</small><br>+1 more</td>
+  <td>No direct outbound edge</td>
+  <td>Builds structured prompts for model calls.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>BRIEFING</code><br><small style="color:var(--muted)">server/prompts.js</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td><code>game.test.js</code><br><small style="color:var(--muted)">test/game.test.js</small><br><code>gameLogic.js</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>BRIEFING node in server/prompts.js.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>BRIEFING_QUESTIONS</code><br><small style="color:var(--muted)">server/prompts.js</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td><code>game.test.js</code><br><small style="color:var(--muted)">test/game.test.js</small><br><code>gameLogic.js</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>BRIEFING_QUESTIONS node in server/prompts.js.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>DOSSIER</code><br><small style="color:var(--muted)">server/prompts.js</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td><code>gameLogic.js</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>DOSSIER node in server/prompts.js.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>FALLBACK_QUESTIONS</code><br><small style="color:var(--muted)">server/prompts.js</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td><code>gameLogic.js</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>FALLBACK_QUESTIONS node in server/prompts.js.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>JSON_REPAIR_INSTRUCTION</code><br><small style="color:var(--muted)">server/prompts.js</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td><code>gemma.js</code><br><small style="color:var(--muted)">server/gemma.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>JSON_REPAIR_INSTRUCTION node in server/prompts.js.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>STAGES</code><br><small style="color:var(--muted)">server/prompts.js</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td><code>gameLogic.js</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>STAGES node in server/prompts.js.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>UNINTELLIGIBLE_REPLIES</code><br><small style="color:var(--muted)">server/prompts.js</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td><code>gameLogic.js</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>UNINTELLIGIBLE_REPLIES node in server/prompts.js.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>server/prompts.js</code></td><td>8 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x7. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 9. Tone detection (sir / rude) ====== -->
+<h2 id="tone-detection-sir-rude">9. Tone detection (sir / rude)</h2>
+<p>Tone detection (sir / rude) groups implementation around server, gamelogicjs, decidetone, formalscore, mostly in server/gameLogic.js. This section covers 3 nodes and 2 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Tone detection (sir / rude) (3 nodes, 2 edges)
+    server_gamelogic_decidetone_05afacc7("decideTone()<br/><small>server/gameLogic.js</small>")
+    server_gamelogic_rudescore_21d7854d("rudeScore()<br/><small>server/gameLogic.js</small>")
+    server_gamelogic_formalscore_c0833de3("formalScore()<br/><small>server/gameLogic.js</small>")
+    server_gamelogic_decidetone_05afacc7 -->|calls| server_gamelogic_rudescore_21d7854d
+    server_gamelogic_decidetone_05afacc7 -->|calls| server_gamelogic_formalscore_c0833de3
+    class server_gamelogic_decidetone_05afacc7 function;
+    class server_gamelogic_rudescore_21d7854d function;
+    class server_gamelogic_formalscore_c0833de3 function;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>decideTone()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>applyTurn()</code><br><small style="color:var(--muted)">server/gameLogic.js</small><br><code>game.test.js</code><br><small style="color:var(--muted)">test/game.test.js</small></td>
+  <td><code>formalScore()</code><br><small style="color:var(--muted)">server/gameLogic.js</small><br><code>rudeScore()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td>decideTone() node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>formalScore()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>decideTone()</code><br><small style="color:var(--muted)">server/gameLogic.js</small><br><code>game.test.js</code><br><small style="color:var(--muted)">test/game.test.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>formalScore() node in server/gameLogic.js.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>rudeScore()</code><br><small style="color:var(--muted)">server/gameLogic.js</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>decideTone()</code><br><small style="color:var(--muted)">server/gameLogic.js</small><br><code>game.test.js</code><br><small style="color:var(--muted)">test/game.test.js</small></td>
+  <td>No direct outbound edge</td>
+  <td>rudeScore() node in server/gameLogic.js.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>server/gameLogic.js</code></td><td>3 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: calls x2. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<h2 id="stats">Project Statistics</h2>
+
+<div class="grid">
+  <div class="card">
+    <h4>Graph</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><td>Nodes</td><td>155</td></tr>
+      <tr><td>Edges</td><td>310</td></tr>
+      <tr><td>Hyperedges</td><td>0</td></tr>
+      <tr><td>Communities</td><td>9</td></tr>
+      <tr><td>Documented Sections</td><td>8</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Edge Confidence</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><td>EXTRACTED</td><td>301</td></tr>
+      <tr><td>INFERRED</td><td>9</td></tr>
+      <tr><td>AMBIGUOUS</td><td>0</td></tr>
+    </table>
+  </div>
+</div>
+
+<div style="text-align:center; padding:40px 0; color: var(--muted); font-size:0.9rem;">
+  <p>bank-security-game — Architecture Documentation</p>
+  <p>Generated: 2026-10-31 11:18 UTC · graphify callflow-html</p>
+</div>
+
+</div><!-- .container -->
+
+<script>
+(function () {
+  const mermaidConfig = {
+    startOnLoad: false,
+    theme: 'dark',
+    securityLevel: 'loose',
+    flowchart: { htmlLabels: true, useMaxWidth: true },
+    themeVariables: {
+      primaryColor: '#1e293b',
+      primaryTextColor: '#e2e8f0',
+      primaryBorderColor: '#38bdf8',
+      secondaryColor: '#0f172a',
+      tertiaryColor: '#334155',
+      lineColor: '#64748b',
+      textColor: '#e2e8f0',
+    }
+  };
+
+  mermaid.initialize(mermaidConfig);
+
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function enhanceMermaidDiagrams() {
+    document.querySelectorAll('.mermaid').forEach((container) => {
+      if (container.dataset.zoomReady === 'true') return;
+      const svg = container.querySelector('svg');
+      if (!svg) return;
+
+      container.dataset.zoomReady = 'true';
+      container.classList.add('is-enhanced');
+
+      const viewport = document.createElement('div');
+      viewport.className = 'mermaid-viewport';
+      svg.parentNode.insertBefore(viewport, svg);
+      viewport.appendChild(svg);
+
+      const toolbar = document.createElement('div');
+      toolbar.className = 'mermaid-toolbar';
+      toolbar.innerHTML = [
+        '<button type="button" data-action="zoom-out" title="Zoom out">-</button>',
+        '<span class="zoom-level" data-role="level">100%</span>',
+        '<button type="button" data-action="zoom-in" title="Zoom in">+</button>',
+        '<button type="button" data-action="fit" title="Fit width">Fit</button>',
+        '<button type="button" data-action="reset" title="Reset view">Reset</button>'
+      ].join('');
+      container.insertBefore(toolbar, viewport);
+
+      const state = { scale: 1, x: 0, y: 0, dragging: false, startX: 0, startY: 0, originX: 0, originY: 0 };
+      const level = toolbar.querySelector('[data-role="level"]');
+
+      function applyTransform() {
+        svg.style.transform = `translate(${state.x}px, ${state.y}px) scale(${state.scale})`;
+        level.textContent = `${Math.round(state.scale * 100)}%`;
+      }
+
+      function zoomBy(delta) {
+        state.scale = clamp(state.scale + delta, 0.25, 3);
+        applyTransform();
+      }
+
+      function reset() {
+        state.scale = 1;
+        state.x = 0;
+        state.y = 0;
+        applyTransform();
+      }
+
+      function fitWidth() {
+        const rawWidth = svg.viewBox && svg.viewBox.baseVal && svg.viewBox.baseVal.width
+          ? svg.viewBox.baseVal.width
+          : svg.getBoundingClientRect().width / state.scale;
+        if (!rawWidth) {
+          reset();
+          return;
+        }
+        state.scale = clamp((viewport.clientWidth - 48) / rawWidth, 0.25, 1.4);
+        state.x = 0;
+        state.y = 0;
+        applyTransform();
+      }
+
+      toolbar.addEventListener('click', (event) => {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const action = button.dataset.action;
+        if (action === 'zoom-in') zoomBy(0.15);
+        if (action === 'zoom-out') zoomBy(-0.15);
+        if (action === 'fit') fitWidth();
+        if (action === 'reset') reset();
+      });
+
+      viewport.addEventListener('wheel', (event) => {
+        if (!event.ctrlKey && !event.metaKey) return;
+        event.preventDefault();
+        zoomBy(event.deltaY < 0 ? 0.1 : -0.1);
+      }, { passive: false });
+
+      viewport.addEventListener('pointerdown', (event) => {
+        if (event.button !== 0) return;
+        state.dragging = true;
+        state.startX = event.clientX;
+        state.startY = event.clientY;
+        state.originX = state.x;
+        state.originY = state.y;
+        viewport.classList.add('is-dragging');
+        viewport.setPointerCapture(event.pointerId);
+      });
+
+      viewport.addEventListener('pointermove', (event) => {
+        if (!state.dragging) return;
+        state.x = state.originX + event.clientX - state.startX;
+        state.y = state.originY + event.clientY - state.startY;
+        applyTransform();
+      });
+
+      function endDrag(event) {
+        if (!state.dragging) return;
+        state.dragging = false;
+        viewport.classList.remove('is-dragging');
+        if (viewport.hasPointerCapture(event.pointerId)) {
+          viewport.releasePointerCapture(event.pointerId);
+        }
+      }
+
+      viewport.addEventListener('pointerup', endDrag);
+      viewport.addEventListener('pointercancel', endDrag);
+      applyTransform();
+    });
+  }
+
+  function renderMermaid() {
+    const result = mermaid.run
+      ? mermaid.run({ querySelector: '.mermaid' })
+      : Promise.resolve();
+    Promise.resolve(result)
+      .then(enhanceMermaidDiagrams)
+      .catch((error) => {
+        console.error('Mermaid render failed:', error);
+        enhanceMermaidDiagrams();
+      });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderMermaid);
+  } else {
+    renderMermaid();
+  }
+})();
+</script>
+
+</body>
+</html>
